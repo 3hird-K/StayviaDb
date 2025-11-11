@@ -6,6 +6,9 @@ import Link from "next/link"
 import Image from "next/image"
 import Logo from "@/assets/icon.png"
 import LogoLight from "@/assets/icon.png"
+import { Samples } from "@/components/sample-query"
+import { ContactForm } from "@/components/contact"
+import { TeamCarousel } from "@/components/team"
 
 export default function Home() {
   return (
@@ -39,8 +42,11 @@ export default function Home() {
         </nav>
 
         {/* Page Content */}
-        <div className="flex-1 flex flex-col gap-10 max-w-5xl p-5">
+        <div className="flex-1 flex flex-col gap-20 max-w-5xl p-5">
           <Hero />
+          <TeamCarousel />
+          <ContactForm />
+          <Samples />
 
         </div>
 

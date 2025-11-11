@@ -3,6 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { InfoIcon, User, Mail, Shield } from "lucide-react"
 import { FetchDataSteps } from "@/components/tutorial/fetch-data-steps"
 import { getAdminUser } from "@/hooks/use-admin"
+import { SectionCards } from "@/components/section-cards"
+import { SiteHeader } from "@/components/site-header"
+import { ChartAreaInteractive } from "@/components/chart-area-interactive"
 
 export default async function ProtectedPage() {
   const { claims } = await getAdminUser()
@@ -10,6 +13,24 @@ export default async function ProtectedPage() {
 
   return (
     <div className="flex-1 w-full flex flex-col gap-8">
+       <SiteHeader 
+          title="StayVia Admin" 
+          subtitle="USTP Dashboard" 
+        />
+
+        <div className="flex flex-1 flex-col">
+          <div className="@container/main flex flex-1 flex-col gap-2">
+            <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
+              {/* <div className="flex flex-row"> */}
+                <SectionCards />
+              {/* </div> */}
+              <div className="px-4 lg:px-6">
+                <ChartAreaInteractive />
+              </div>
+              {/* <DataTable data={data} /> */}
+            </div>
+          </div>
+        </div>
 
           {/* <UsersTableClient /> */}
           <div className="bg-accent text-sm p-3 px-5 rounded-md text-foreground flex gap-3 items-center">

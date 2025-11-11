@@ -28,45 +28,21 @@ import {
 } from "@/components/ui/sidebar"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
-import { Database } from "@/database.types"
-// import { getUserById } from "@/lib/supabase/users"
-import { useQuery } from "@tanstack/react-query"
-// import avatarUrl from "@/assets/icon.jpg"
+import { User } from "@/lib/supabase/userService"
 
-type User = Database["public"]["Tables"]["users"]["Row"]
-
-export function NavUser(
-  // { user }: { user: User }
-) {
+export function NavUser({ user }: { user: User | null }) {
   const router = useRouter()
   const { open, isMobile } = useSidebar()
 
-  // const userId = user.id;
-  // const { data: userDb, isLoading, isError } = useQuery({
-  //   queryKey: ["users", userId],
-  //   queryFn: () => getUserById(userId),
-  //   enabled: !!userId,
-  // })
-
-
-  // console.log(userDb?.id)
   const logout = async () => {
     const supabase = createClient()
     await supabase.auth.signOut()
     router.push("/auth/login")
   }
 
-  // if (isLoading) {
-  //   return <div className="p-2 text-sm text-muted-foreground">Loading...</div>
-  // }
-
-  // if (isError || !userDb) {
-  //   return <div className="p-2 text-sm text-destructive">Failed to load user</div>
-  // }
-
-  const avatarUrl = "../assets/icon.jpg"
-  // (userDb as any).avatar ||
-   
+  const avatarUrl = "/default-avatar.png"
+  const initials =
+    `${user?.firstname?.[0] || "U"}${user?.lastname?.[0] || ""}`.toUpperCase()
 
   return (
     <SidebarMenu>
@@ -78,29 +54,19 @@ export function NavUser(
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
               <Avatar className="h-8 w-8 rounded-lg grayscale">
-                <AvatarImage src={
-                  avatarUrl
-                  }
-                   alt={
-                    // userDb.firstname ||
-                     "User"} />
+                <AvatarImage src={avatarUrl} alt={user?.firstname || "User"} />
                 <AvatarFallback className="rounded-sm text-sm">
-                  {
-                  // userDb.firstname?.charAt(0) ||
-                   "U"}
-                  {
-                  // userDb.lastname?.charAt(0) || 
-                  ""}
+                  {initials}
                 </AvatarFallback>
               </Avatar>
 
               {open && (
                 <div className="grid flex-1 text-left text-sm leading-tight ml-2">
                   <span className="truncate font-medium">
-                    {/* {userDb.firstname} {userDb.lastname} */}
+                    {user ? `${user.firstname} ${user.lastname}` : "Loading..."}
                   </span>
                   <span className="text-muted-foreground truncate text-xs">
-                    {/* {userDb.role} */}
+                    {user?.email || ""}
                   </span>
                 </div>
               )}
@@ -118,24 +84,15 @@ export function NavUser(
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
-                  <AvatarImage src={avatarUrl} alt={
-                    // userDb.firstname || 
-                    "User"} />
-                  <AvatarFallback className="rounded-lg">
-                    {
-                    // userDb.firstname?.charAt(0) ||
-                     "U"}
-                    {
-                    // userDb.lastname?.charAt(0) || 
-                    ""}
-                  </AvatarFallback>
+                  <AvatarImage src={avatarUrl} alt={user?.firstname || "User"} />
+                  <AvatarFallback className="rounded-lg">{initials}</AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-medium">
-                    {/* {userDb.firstname} {userDb.lastname} */}
+                    {user ? `${user.firstname} ${user.lastname}` : "Unknown User"}
                   </span>
                   <span className="text-muted-foreground truncate text-xs">
-                    {/* {userDb.email} */}
+                    {user?.email || ""}
                   </span>
                 </div>
               </div>

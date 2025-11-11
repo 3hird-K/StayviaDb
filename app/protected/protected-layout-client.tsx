@@ -6,6 +6,9 @@ import {
   SidebarProvider,
   useSidebar,
 } from "@/components/ui/sidebar"
+import { useCurrentUser } from "@/hooks/use-current-user"
+import { getUserByEmail, User } from "@/lib/supabase/userService"
+import { useQuery } from "@tanstack/react-query"
 
 export default function ProtectedLayoutClient({
   children,
@@ -13,7 +16,10 @@ export default function ProtectedLayoutClient({
   children: React.ReactNode
 }) {
   return (
-    <SidebarProvider defaultOpen={true} style={{ "--sidebar-width": "16rem" } as React.CSSProperties}>
+    <SidebarProvider
+      defaultOpen={true}
+      style={{ "--sidebar-width": "16rem" } as React.CSSProperties}
+    >
       <ProtectedLayoutContent>{children}</ProtectedLayoutContent>
     </SidebarProvider>
   )
@@ -21,6 +27,26 @@ export default function ProtectedLayoutClient({
 
 function ProtectedLayoutContent({ children }: { children: React.ReactNode }) {
   const { open, isMobile } = useSidebar()
+  const { user } = useCurrentUser()
+  const email = user?.email
+
+  const {
+    data: userData,
+    isLoading,
+    error,
+  } = useQuery<User | null>({
+    queryKey: ["admins", email],
+    queryFn: async () => {
+      if (!email) return null
+      return getUserByEmail(email)
+    },
+    enabled: !!email,
+  })
+
+  if (isLoading) return <p>Loading...</p>
+  if (error) return <p>Error: {(error as Error).message}</p>
+
+  // console.log("User:", data)
 
   return (
     <div className="flex w-full min-h-screen">
@@ -36,7 +62,7 @@ function ProtectedLayoutContent({ children }: { children: React.ReactNode }) {
               }`
         }`}
       >
-        <AppSidebar />
+        <AppSidebar user={userData ?? null}/>
       </div>
 
       {/* Main content */}

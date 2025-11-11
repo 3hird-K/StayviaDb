@@ -3,17 +3,14 @@
 import * as React from "react"
 import {
   IconDashboard,
-  IconChartBar,
-  IconFolder,
+  IconActivity,
+  IconNotes,
   IconUsers,
   IconSettings,
   IconHelp,
   IconSearch,
   IconDatabase,
-  IconReport,
   IconFileWord,
-  IconActivity,
-  IconNotes,
 } from "@tabler/icons-react"
 
 import { NavDocuments } from "@/components/nav-documents"
@@ -36,20 +33,15 @@ import darkLogo from "@/assets/icon.png"
 import lightLogo from "@/assets/icon.png"
 import Image from "next/image"
 import { useTheme } from "next-themes"
-import { Database } from "@/database.types"
 import { useRouter, usePathname } from "next/navigation"
+import { User } from "@/lib/supabase/userService"
 
-type User = Database["public"]["Tables"]["users"]["Row"]
 
-// interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
-//   user: User
-// }
+interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
+  user: User | null
+}
 
-export function AppSidebar({ 
-  // user,
-   ...props }
-  //  : AppSidebarProps
-  ) {
+export function AppSidebar({ user, ...props }: AppSidebarProps) {
   const { open, toggleSidebar } = useSidebar()
   const { theme } = useTheme()
   const router = useRouter()
@@ -57,31 +49,29 @@ export function AppSidebar({
 
   const logoSrc = theme === "light" ? lightLogo : darkLogo
 
-
-
   const navMain = [
     { title: "Dashboard", url: "/protected", icon: IconDashboard },
-    { title: "Activities", url: "/protected/announcements", icon: IconActivity },
-    { title: "Rules", url: "/protected/rules", icon: IconNotes },
+    { title: "Manage Landlords", url: "/protected/landlords", icon: IconActivity },
+    { title: "Manage Students", url: "/protected/students", icon: IconNotes },
+    { title: "Manage Properties", url: "/protected/properties", icon: IconActivity },
+    { title: "Rentai Requests", url: "/protected/rules", icon: IconNotes },
+    { title: "Team", url: "/protected/team", icon: IconUsers },
   ]
-    navMain.push({ title: "Team", url: "/protected/team", icon: IconUsers })
-  
 
   const navSecondary = [
-    { title: "Theme", url: "/protected", icon: IconSettings },
+    { title: "Settings", url: "/protected", icon: IconSettings },
     { title: "Get Help", url: "/protected", icon: IconHelp },
     { title: "Search", url: "/protected", icon: IconSearch },
   ]
 
   const documents = [
-    { name: "Data Library", url: "/protected", icon: IconDatabase },
-    { name: "Reports", url: "/protected", icon: IconReport },
+    { name: "Reviews & Feedbacks", url: "/protected", icon: IconDatabase },
     { name: "Word Assistant", url: "/protected", icon: IconFileWord },
   ]
 
-
   return (
     <Sidebar collapsible="icon" variant="inset" {...props}>
+      {/* Header */}
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
@@ -89,7 +79,13 @@ export function AppSidebar({
               <div className="flex items-center justify-start w-full">
                 {open ? (
                   <>
-                    <Image src={logoSrc} alt="Logo" height={70} width={70} />
+                    <Image
+                      src={logoSrc}
+                      alt="Logo"
+                      height={70}
+                      width={70}
+                      onClick={() => router.push("/")}
+                    />
                     <SidebarTrigger
                       onClick={toggleSidebar}
                       className="text-5xl ml-auto mr-[-0.5rem]"
@@ -107,14 +103,13 @@ export function AppSidebar({
         </SidebarMenu>
       </SidebarHeader>
 
-      {/* Sidebar Content */}
+      {/* Content */}
       <SidebarContent>
         <NavMain
           items={navMain}
           showText={open}
           onItemClick={(url) => router.push(url)}
           activePath={pathname}
-          // user={user}
         />
         <NavDocuments
           items={documents}
@@ -131,11 +126,9 @@ export function AppSidebar({
         />
       </SidebarContent>
 
-      {/* Footer with user info */}
+      {/* Footer (User info) */}
       <SidebarFooter>
-        <NavUser 
-        // user={user} 
-        />
+        <NavUser user={user} />
       </SidebarFooter>
     </Sidebar>
   )

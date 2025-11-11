@@ -19,6 +19,7 @@ export function Hero() {
         />
       </a>
 
+
       {/* Title */}
       <div>
         <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-foreground">
