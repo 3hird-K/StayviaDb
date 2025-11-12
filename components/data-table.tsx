@@ -1,512 +1,349 @@
 "use client"
 
 import * as React from "react"
-import {
-  Tabs,
-  TabsList,
-  TabsTrigger,
-  TabsContent,
-} from "@/components/ui/tabs"
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from "@/components/ui/select"
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuCheckboxItem,
-} from "@/components/ui/dropdown-menu"
-import {
-  Table,
-  TableHeader,
-  TableRow,
-  TableHead,
-  TableBody,
-  TableCell,
-} from "@/components/ui/table"
-import { Button } from "@/components/ui/button"
+import { useReactTable, flexRender, ColumnDef, Row, ColumnFiltersState, SortingState, VisibilityState, getCoreRowModel, getFilteredRowModel, getPaginationRowModel, getSortedRowModel, getFacetedRowModel, getFacetedUniqueValues } from "@tanstack/react-table"
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table"
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
-
-import {
-  IconChevronDown,
-  IconLayoutColumns,
-  IconChevronsLeft,
-  IconChevronLeft,
-  IconChevronRight,
-  IconChevronsRight,
-  IconGripVertical,
-} from "@tabler/icons-react"
-
-import {
-  DndContext,
-  closestCenter,
-  DragEndEvent,
-} from "@dnd-kit/core"
-import {
-  SortableContext,
-  useSortable,
-  verticalListSortingStrategy,
-} from "@dnd-kit/sortable"
-import {
-  restrictToVerticalAxis,
-} from "@dnd-kit/modifiers"
-
-import {
-  useReactTable,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  getFacetedRowModel,
-  getFacetedUniqueValues,
-  ColumnFiltersState,
-  SortingState,
-  VisibilityState,
-  flexRender,
-  ColumnDef,
-  Row,
-} from "@tanstack/react-table"
-import z from "zod"
-
-import { MouseSensor, TouchSensor, KeyboardSensor, useSensors, useSensor } from "@dnd-kit/core"
-import { UniqueIdentifier } from "@dnd-kit/core"
-import { EditUserDialog } from "./edit-users-dialog"
-import { AdminRegisterDialog } from "./admin-register"
-import { useQuery } from "@tanstack/react-query"
-import { getAllCourse } from "@/lib/supabase/course"
-import { CSS } from "@dnd-kit/utilities"
-import { useIsMobile } from "@/hooks/use-mobile"
-import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle, DrawerTrigger } from "./ui/drawer"
-import { ChartViewer } from "./chart-viewer"
-import { ChartConfig } from "./ui/chart"
-import { CourseInfo } from "./course-info"
-import { Database } from "@/database.types"
-
-export const schema = z.object({
-    id: z.string(),
-    firstname: z.string(),
-    lastname: z.string(),
-    role: z.string(),
-    email: z.string(),
-    created_at: z.string().nullable(),
-    course_id: z.string().nullable(),
-    avatar_url: z.string().nullable(),
-    updated_at: z.string().nullable(),
-  })
-export type User = z.infer<typeof schema>
-
-type Users = Database["public"]["Tables"]["users"]["Row"]
+import { Button } from "@/components/ui/button"
+// Removed Dnd-kit imports
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription, DrawerFooter, DrawerClose } from "./ui/drawer"
+import { Badge } from "@/components/ui/badge" 
+// Assuming these are available from your component library:
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar" 
+import { IconMail, IconPhone, IconUserCircle, IconSchool, IconCheck, IconX, IconLicense, IconUserCheck, IconMessage } from "@tabler/icons-react" // For icons
+// REMOVED: Card, CardHeader, CardContent, CardTitle imports
+import { Separator } from "@/components/ui/separator"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog"
+import { Textarea } from "./ui/textarea"
+import { SiteHeader } from "./site-header"
 
 
-const chartData = [
-  { month: "January", desktop: 186, mobile: 80 },
-  { month: "February", desktop: 305, mobile: 200 },
-  { month: "March", desktop: 237, mobile: 120 },
-  { month: "April", desktop: 73, mobile: 190 },
-  { month: "May", desktop: 209, mobile: 130 },
-  { month: "June", desktop: 214, mobile: 140 },
-]
+// -----------------------------
+// Generic DataTable Props (UNCHANGED)
+// -----------------------------
+export interface DataTableProps<T> {
+ data: T[]
+ columns: ColumnDef<T>[]
+ title?: string
+}
 
-const chartConfig = {
-  desktop: {
-    label: "Desktop",
-    color: "var(--primary)",
-  },
-  mobile: {
-    label: "Mobile",
-    color: "var(--primary)",
-  },
-} satisfies ChartConfig
+// -----------------------------
+// DataTable Component (UNCHANGED)
+// -----------------------------
+export function DataTable<T extends { id: string; firstname?: string | null; lastname?: string | null; account_type?: string | null }>({ data = [], columns, title }: DataTableProps<T>) {
+ const [rowSelection, setRowSelection] = React.useState({})
+ const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
+ const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
+ const [sorting, setSorting] = React.useState<SortingState>([])
+ const [pagination, setPagination] = React.useState({ pageIndex: 0, pageSize: 10 })
+ const [statusFilter, setStatusFilter] = React.useState<string>("all") 
+ const [selectedUser, setSelectedUser] = React.useState<T | null>(null)
 
-// ===============================
-// Reusable DataTable Component
-// ===============================
-export function DataTable({ data }: { data: User[] }) {
-  // Table states
-  const [rowSelection, setRowSelection] = React.useState({})
-  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
-  const [sorting, setSorting] = React.useState<SortingState>([])
-  const [pagination, setPagination] = React.useState({ pageIndex: 0, pageSize: 10 })
+ const table = useReactTable({
+  data,
+  columns,
+  state: { sorting, columnVisibility, rowSelection, columnFilters, pagination },
+  getRowId: (row) => row.id,
+  enableRowSelection: true,
+  onRowSelectionChange: setRowSelection,
+  onSortingChange: setSorting,
+  onColumnFiltersChange: setColumnFilters,
+  onColumnVisibilityChange: setColumnVisibility,
+  onPaginationChange: setPagination,
+  getCoreRowModel: getCoreRowModel(),
+  getFilteredRowModel: getFilteredRowModel(),
+  getPaginationRowModel: getPaginationRowModel(),
+  getSortedRowModel: getSortedRowModel(),
+  getFacetedRowModel: getFacetedRowModel(),
+  getFacetedUniqueValues: getFacetedUniqueValues(),
+  globalFilterFn: "includesString",
+ })
 
-  const sortableId = React.useId()
-  const sensors = useSensors(
-    useSensor(MouseSensor),
-    useSensor(TouchSensor),
-    useSensor(KeyboardSensor)
-  )
-
-  const dataIds = React.useMemo<UniqueIdentifier[]>(() => data?.map(({ id }) => id) || [], [data])
-
-  const [roleFilter, setRoleFilter] = React.useState<string>("all")
-
-  const table = useReactTable({
-    data,
-    columns,
-    state: { sorting, columnVisibility, rowSelection, columnFilters, pagination },
-    getRowId: (row) => row.id.toString(),
-    enableRowSelection: true,
-    onRowSelectionChange: setRowSelection,
-    onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
-    onColumnVisibilityChange: setColumnVisibility,
-    onPaginationChange: setPagination,
-    getCoreRowModel: getCoreRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getFacetedRowModel: getFacetedRowModel(),
-    getFacetedUniqueValues: getFacetedUniqueValues(),
-  })
-
-  // Role filter effect
-  React.useEffect(() => {
-    if (roleFilter === "all") {
-      table.setColumnFilters([])
-    } else {
-      table.setColumnFilters([{ id: "role", value: roleFilter }])
-    }
-  }, [roleFilter])
-
-  // Drag & Drop reorder handler
-  function handleDragEnd(event: DragEndEvent) {
-    const { active, over } = event
-    if (!over || active.id === over.id) return
-    // ⚡ Add reordering logic if needed
+ React.useEffect(() => {
+  if (statusFilter === "all") {
+   table.setColumnFilters([])
+  } else {
+   table.setColumnFilters([{ 
+    id: "account_type", 
+    value: statusFilter,
+   }])
   }
+ }, [statusFilter, table])
 
-  return (
-    <Tabs defaultValue="instructor" className="w-full flex-col justify-start gap-6">
-      {/* Header Controls */}
-      <div className="flex items-center justify-between px-4 lg:px-6">
-        <Label htmlFor="view-selector" className="sr-only">View</Label>
+ return (
+  <div className="w-full flex flex-col gap-4">
+   <SiteHeader title="Manage Landlord" subtitle="Dashboard" />
 
-        {/* Mobile role filter */}
-        <Select value={roleFilter} onValueChange={setRoleFilter}>
-          <SelectTrigger className="flex w-fit @4xl/main:hidden" size="sm">
-            <SelectValue placeholder="Select a role" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All</SelectItem>
-            <SelectItem value="instructor">Instructor</SelectItem>
-            <SelectItem value="student">Student</SelectItem>
-            <SelectItem value="admin">Admin</SelectItem>
-            <SelectItem value="admin/instructor">Admin/Instructor</SelectItem>
-          </SelectContent>
-        </Select>
+   {/* Status Filter */}
+   <div className="flex items-center justify-between gap-4 px-4 lg:px-6">
+    <Label htmlFor="view-selector" className="sr-only">Filter by Status</Label>
+    <Select value={statusFilter} onValueChange={setStatusFilter}>
+     <SelectTrigger className="w-fit" size="sm">
+      <SelectValue placeholder="Filter by Status" />
+     </SelectTrigger>
+     <SelectContent>
+      <SelectItem value="all">All Landlords</SelectItem>
+      {/* <SelectItem value="landlord">Verified</SelectItem> */}
+      <SelectItem value="landlord_unverified">Pending</SelectItem>
+     </SelectContent>
+    </Select>
+   </div>
 
-        {/* Desktop tabs */}
-        <TabsList className="hidden @4xl/main:flex">
-          <TabsTrigger value="instructor">Instructor</TabsTrigger>
-          <TabsTrigger value="student">Student</TabsTrigger>
-          <TabsTrigger value="key-personnel">Admin</TabsTrigger>
-        </TabsList>
+   {/* Table */}
+   <div className="overflow-hidden rounded-lg border">
+     <Table>
+      <TableHeader className="bg-muted sticky top-0 z-10">
+       {table.getHeaderGroups().map((headerGroup) => (
+        <TableRow key={headerGroup.id}>
+         {headerGroup.headers.map((header) => (
+          <TableHead key={header.id}>
+           {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+          </TableHead>
+         ))}
+        </TableRow>
+       ))}
+      </TableHeader>
+      <TableBody>
+       {table.getRowModel().rows?.length ? (
+         table.getRowModel().rows.map((row) => (
+          <StandardRow key={row.id} row={row} onSelectUser={setSelectedUser} />
+         ))
+       ) : (
+        <TableRow>
+         <TableCell colSpan={columns.length} className="h-24 text-center">
+          No data found.
+         </TableCell>
+        </TableRow>
+       )}
+      </TableBody>
+     </Table>
+   </div>
 
-        {/* Column filter + Admin register */}
-        <div className="flex items-center gap-2">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm">
-                <IconLayoutColumns />
-                <span className="hidden lg:inline">Filter Columns</span>
-                <span className="lg:hidden">Columns</span>
-                <IconChevronDown />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              {table.getAllColumns()
-                .filter((col) => typeof col.accessorFn !== "undefined" && col.getCanHide())
-                .map((col) => (
-                  <DropdownMenuCheckboxItem
-                    key={col.id}
-                    checked={col.getIsVisible()}
-                    onCheckedChange={(val) => col.toggleVisibility(!!val)}
-                  >
-                    {col.id}
-                  </DropdownMenuCheckboxItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <AdminRegisterDialog />
+   {/* Drawer */}
+   {selectedUser && <UserDrawer user={selectedUser} onClose={() => setSelectedUser(null)} />}
+  </div>
+ )
+}
+
+// -----------------------------
+// Standard Table Row (UNCHANGED)
+// -----------------------------
+function StandardRow<T extends { id: string; firstname?: string | null; lastname?: string | null; account_type?: string | null }>({
+ row,
+ onSelectUser,
+}: {
+ row: Row<T>
+ onSelectUser: (user: T) => void
+}) {
+ return (
+  <TableRow
+   data-state={row.getIsSelected() && "selected"}
+   className="cursor-pointer hover:bg-muted/50 transition-colors"
+   onClick={() => onSelectUser(row.original)} // Clicking the row opens the drawer
+  >
+   {row.getVisibleCells().map((cell) => (
+    <TableCell key={cell.id} className="pr-4">
+     {flexRender(cell.column.columnDef.cell, cell.getContext())}
+    </TableCell>
+   ))}
+  </TableRow>
+ )
+}
+
+function UserDrawer<T extends { 
+    id: string;
+    username?: string | null;
+    firstname?: string | null; 
+    lastname?: string | null; 
+    account_type?: string | null;
+    avatar?: string | null; 
+    email?: string | null; 
+    contact?: number | null; 
+    online?: boolean | null; 
+    school?: string | null; 
+    student_id?: number | null; 
+    landlord_proof_id?: string | null; 
+    created_at?: string | null; 
+}>({
+ user,
+ onClose,
+}: {
+ user: T
+ onClose: () => void
+}) {
+  // State for managing the verification dialog
+  const [isDialogOpen, setIsDialogOpen] = React.useState(false);
+
+  const firstName = user.firstname ?? ""
+  const lastName = user.lastname ?? ""
+  const fullName = `${firstName} ${lastName}`.trim() || user?.username || user.id
+  const initials = (firstName.charAt(0) + lastName.charAt(0)).toUpperCase()
+  const accountType = user.account_type ?? "N/A"
+  const contact = user.contact ? user.contact.toString() : "N/A"
+  const email = user.email ?? "N/A"
+  const school = user.school ?? "N/A"
+  const isOnline = user.online ?? false
+
+  const statusBadgeVariant = accountType === "landlord" ? "default" : accountType === "landlord_unverified" ? "secondary" : "outline";
+  const statusBadgeText = accountType === "landlord" ? "Verified" : accountType === "landlord_unverified" ? "Pending" : accountType;
+  const createdAtFormatted = user.created_at ? new Intl.DateTimeFormat('en-US', { dateStyle: 'medium' }).format(new Date(user.created_at)) : 'N/A';
+
+  const customAvatar = `https://ptwhyrlrfmpyhkwmljlu.supabase.co/storage/v1/object/public/user-profiles/${user.avatar}`
+  const customLandlordProof = user.landlord_proof_id ? `https://ptwhyrlrfmpyhkwmljlu.supabase.co/storage/v1/object/public/user-profiles/${user.landlord_proof_id}` : null;
+
+  const isPending = accountType === "landlord_unverified";
+
+ return (
+  <Drawer direction="right" open={true} onOpenChange={(open) => { if (!open) onClose(); }}>
+   <DrawerContent className="p-0">
+   
+    {/* Header Section: Avatar, Name, Status (UNCHANGED) */}
+    <div className="flex flex-col items-center p-6 bg-muted/30 border-b">
+      <Avatar className="h-24 w-24 mb-4 border-4 border-primary/20">
+        <AvatarImage src={customAvatar ?? undefined} alt={fullName} />
+        <AvatarFallback className="text-xl">{initials || <IconUserCircle size={32} />}</AvatarFallback>
+      </Avatar>
+      <DrawerTitle className="text-2xl font-bold">{fullName}</DrawerTitle>
+      <DrawerDescription className="flex items-center space-x-2 mt-1">
+        <Badge variant={statusBadgeVariant} className="h-6 text-sm">{statusBadgeText}</Badge>
+        <Badge variant={isOnline ? "default" : "outline"} className="h-6 text-xs">
+          {isOnline ? "Online" : "Offline"}
+        </Badge>
+      </DrawerDescription>
+    </div>
+
+    {/* Content: User Details (UNCHANGED) */}
+    <div className="p-6 overflow-y-auto space-y-8 flex-grow">
+      {/* Contact Information */}
+      <div className="space-y-3">
+        <h4 className="flex items-center text-lg font-semibold space-x-2 text-primary border-b pb-2 mb-3">
+          <IconMail className="w-5 h-5" />
+          <span>Contact Info</span>
+        </h4>
+        <div className="space-y-3 text-sm">
+          <p className="flex justify-between items-center">
+            <span className="font-medium text-muted-foreground">Email:</span> 
+            <span>{email}</span>
+          </p>
+          <p className="flex justify-between items-center">
+            <span className="font-medium text-muted-foreground">Contact No:</span> 
+            <span>{contact}</span>
+          </p>
+          <p className="flex justify-between items-center">
+            <span className="font-medium text-muted-foreground">Joined:</span> 
+            <span>{createdAtFormatted}</span>
+          </p>
         </div>
       </div>
 
-      {/* Table Content */}
-      <TabsContent value="instructor" className="relative flex flex-col gap-4 overflow-auto px-4 lg:px-6">
-        <div className="overflow-hidden rounded-lg border">
-          <DndContext
-            collisionDetection={closestCenter}
-            modifiers={[restrictToVerticalAxis]}
-            onDragEnd={handleDragEnd}
-            sensors={sensors}
-            id={sortableId}
-          >
-            <Table>
-              <TableHeader className="bg-muted sticky top-0 z-10">
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <TableRow key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => (
-                      <TableHead key={header.id}>
-                        {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
-                      </TableHead>
-                    ))}
-                  </TableRow>
-                ))}
-              </TableHeader>
-              <TableBody>
-                {table.getRowModel().rows?.length ? (
-                  <SortableContext items={dataIds} strategy={verticalListSortingStrategy}>
-                    {table.getRowModel().rows.map((row) => (
-                      <DraggableRow key={row.id} row={row} />
-                    ))}
-                  </SortableContext>
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={columns.length} className="h-24 text-center">
-                      No data found.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </DndContext>
+      {/* Verification & Academic Info */}
+      <div className="space-y-3">
+        <h4 className="flex items-center text-lg font-semibold space-x-2 text-primary border-b pb-2 mb-3">
+          <IconLicense className="w-5 h-5" />
+          <span>Verification & School</span>
+        </h4>
+        <div className="space-y-3 text-sm">
+          
+            {/* Landlord ID Proof Status */}
+          <p className="flex justify-between items-center">
+            <span className="font-medium text-muted-foreground">Landlord ID Proof:</span> 
+            {customLandlordProof ? (
+                <Badge variant="default" className="space-x-1"><IconCheck className="w-3 h-3"/> <span>Submitted</span></Badge>
+            ) : (
+                <Badge variant="secondary" className="space-x-1"><IconX className="w-3 h-3"/> <span>Not Submitted</span></Badge>
+            )}
+          </p>
+
+            {/* Conditionally Display Proof Image */}
+            {customLandlordProof && (
+                <div className="pt-2">
+                    <h5 className="font-semibold text-sm mb-2">Proof Document:</h5>
+                    <div className="border rounded-lg overflow-hidden max-h-60">
+                        <img 
+                           src={customLandlordProof} 
+                           alt={`Landlord Proof for ${fullName}`} 
+                           className="w-full h-auto object-cover max-h-60" 
+                        />
+                    </div>
+                </div>
+            )}
+            <Separator className="my-3"/>
+
+
+          {/* <p className="flex justify-between items-center">
+            <span className="font-medium text-muted-foreground">School/University:</span> 
+            <span>{school}</span>
+          </p>
+          <p className="flex justify-between items-center">
+            <span className="font-medium text-muted-foreground">Student ID:</span> 
+            <span>{user.student_id ?? 'N/A'}</span>
+          </p> */}
         </div>
+      </div>
 
-        {/* Pagination */}
-        <div className="flex items-center justify-between px-4">
-          <div className="text-muted-foreground hidden flex-1 text-sm lg:flex">
-            {table.getFilteredSelectedRowModel().rows.length} of {table.getFilteredRowModel().rows.length} row(s) selected.
-          </div>
-          <div className="flex w-full items-center gap-8 lg:w-fit">
-            {/* Rows per page */}
-            <div className="hidden items-center gap-2 lg:flex">
-              <Label htmlFor="rows-per-page" className="text-sm font-medium">Rows per page</Label>
-              <Select value={`${table.getState().pagination.pageSize}`} onValueChange={(val) => table.setPageSize(Number(val))}>
-                <SelectTrigger size="sm" className="w-20" id="rows-per-page">
-                  <SelectValue placeholder={table.getState().pagination.pageSize} />
-                </SelectTrigger>
-                <SelectContent side="top">
-                  {[10, 20, 30, 40, 50].map((pageSize) => (
-                    <SelectItem key={pageSize} value={`${pageSize}`}>{pageSize}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+    </div>
 
-            {/* Page info */}
-            <div className="flex items-center justify-center text-sm font-medium">
-              Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
-            </div>
+    <DrawerFooter className="border-t p-4">
+      {isPending ? (
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                  <Button variant="default" className="w-full space-x-2">
+                      <IconUserCheck className="w-4 h-4" /> 
+                      <span>Verify Landlord</span>
+                  </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px]">
+                  <DialogHeader>
+                      <DialogTitle>Verification Action for {fullName}</DialogTitle>
+                      <DialogDescription>
+                          Choose to Approve the landlord's verification or request re-submission of proof.
+                      </DialogDescription>
+                  </DialogHeader>
+                  <div className="grid gap-4 py-4">
+                      {/* Option 1: Request Re-upload/Send Message */}
+                      <div className="space-y-2">
+                          <h5 className="text-base font-semibold flex items-center space-x-1 text-yellow-600">
+                             <IconMessage className="w-4 h-4"/> 
+                             <span>Request Re-upload (Message)</span>
+                          </h5>
+                          <Textarea placeholder="Explain why the proof needs to be re-uploaded..." className="resize-none" />
+                          <Button variant="secondary" className="w-full">
+                              Send Message & Reject Proof
+                          </Button>
+                      </div>
+                      
+                      <Separator />
 
-            {/* Page controls */}
-            <div className="ml-auto flex items-center gap-2 lg:ml-0">
-              <Button variant="outline" size="icon" onClick={() => table.setPageIndex(0)} disabled={!table.getCanPreviousPage()}>
-                <IconChevronsLeft />
-              </Button>
-              <Button variant="outline" size="icon" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>
-                <IconChevronLeft />
-              </Button>
-              <Button variant="outline" size="icon" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>
-                <IconChevronRight />
-              </Button>
-              <Button variant="outline" size="icon" onClick={() => table.setPageIndex(table.getPageCount() - 1)} disabled={!table.getCanNextPage()}>
-                <IconChevronsRight />
-              </Button>
-            </div>
-          </div>
-        </div>
-      </TabsContent>
-
-      {/* Other tabs (placeholders for now) */}
-      {/* <TabsContent value="student" className="px-4 lg:px-6">Student view</TabsContent>
-      <TabsContent value="key-personnel" className="px-4 lg:px-6">Admin view</TabsContent> */}
-    </Tabs>
-  )
+                      {/* Option 2: Approve Verification */}
+                      <div className="space-y-2">
+                          <h5 className="text-base font-semibold flex items-center space-x-1 text-green-600">
+                             <IconCheck className="w-4 h-4"/> 
+                             <span>Approve Verification</span>
+                          </h5>
+                          <p className="text-sm text-muted-foreground">This will set the user's account status to 'landlord' (Verified).</p>
+                      </div>
+                  </div>
+                  <DialogFooter>
+                    <Button variant="default">Verify Landlord</Button>
+                    <Button onClick={() => setIsDialogOpen(false)} variant="outline">Cancel</Button>
+                  </DialogFooter>
+              </DialogContent>
+          </Dialog>
+      ) : (
+          <Button variant="default" className="w-full">Update User</Button> // Or 'Edit User' if not pending
+      )}
+     <DrawerClose asChild><Button variant="outline" className="w-full">Close Profile</Button></DrawerClose>
+    </DrawerFooter>
+   </DrawerContent>
+  </Drawer>
+ )
 }
 
-
-const columns: ColumnDef<User>[] = [
-  {
-    id: "drag",
-    header: () => null,
-    cell: ({ row }) => <DragHandle id={row.original.id} />,
-  },
-  {
-    accessorKey: "id",
-    header: "Account #",
-    cell: ({ row }) => {
-      return <TableCellViewer item={row.original} />
-    },
-    enableHiding: false,
-  },
-  {
-    accessorKey: "course_id",
-    header: "Course",
-    enableHiding: true,
-    cell: ({ row }) => {
-      const courseId = row.original.course_id
-
-      const { data: courses = [], isLoading } = useQuery({
-        queryKey: ["courses"],
-        queryFn: getAllCourse,
-      })
-
-      if (isLoading) return <span>Loading...</span>
-
-      const course = courses.find((c) => c.id === courseId)
-      return course ? course.name : "Not Enrolled"
-    },
-  },
-
-  {
-    accessorKey: "role",
-    header: "Type",
-    enableHiding: true,
-  },
-  {
-    accessorKey: "firstname",
-    header: "Firstname",
-    enableHiding: true,
-  },
-  {
-    accessorKey: "lastname",
-    header: "Lastname",
-    enableHiding: true,
-  },
-  {
-    accessorKey: "email",
-    header: "Email",
-    enableHiding: true,
-  },
-  {
-  accessorKey: "created_at",
-  header: "Created At",
-  enableHiding: true,
-  cell: ({ row }) => {
-    const rawDate = row.original.created_at
-    if (!rawDate) return "N/A"
-
-    const date = new Date(rawDate)
-    return date.toLocaleString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    })
-  },
-},
-{
-  id: "actions",
-  cell: ({ row }) => {
-    return <EditUserDialog user={row.original} />
-  },
-}
-]
-
-function DraggableRow({ row }: { row: Row<User> }) {
-  const { transform, transition, setNodeRef, isDragging } = useSortable({
-    id: row.original.id,
-  })
-
-  return (
-    <TableRow
-      data-state={row.getIsSelected() && "selected"}
-      data-dragging={isDragging}
-      ref={setNodeRef}
-      className="relative z-0 data-[dragging=true]:z-10 data-[dragging=true]:opacity-80"
-      style={{
-        transform: CSS.Transform.toString(transform),
-        transition: transition,
-      }}
-    >
-      {row.getVisibleCells().map((cell, index) => (
-        <TableCell
-          key={cell.id}
-          className={index === 0 ? "sticky left-0 z-10 bg-background" : ""}
-        >
-          {flexRender(cell.column.columnDef.cell, cell.getContext())}
-        </TableCell>
-      ))}
-
-    </TableRow>
-  )
-}
-
-
-
-function DragHandle({ id }: { id: string }) {
-  const { attributes, listeners } = useSortable({
-    id,
-  })
-
-  return (
-    <Button
-    {...attributes}
-    {...listeners}
-      variant="ghost"
-      size="icon"
-      className="text-muted-foreground size-7 hover:bg-transparent"
-    >
-      <IconGripVertical className="text-muted-foreground size-3" />
-      <span className="sr-only">Drag to reorder</span>
-    </Button>
-  )
-}
-
-
-function TableCellViewer({ item }: { item: User }) {
-  const isMobile = useIsMobile()
-  function toCapitalize(str?: string) {
-    if (!str) return ""
-    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase()
-  }
-
-  return (
-    <Drawer direction={isMobile ? "bottom" : "right"}>
-      <DrawerTrigger asChild>
-        <Button variant="link" className="text-foreground w-fit px-0 text-left">
-          {item.id}
-        </Button>
-      </DrawerTrigger>
-      <DrawerContent>
-        <DrawerHeader className="gap-1">
-          <DrawerTitle>
-            {toCapitalize(item.lastname)} {toCapitalize(item.firstname)}
-          </DrawerTitle>
-          <DrawerDescription>Showing Account Info</DrawerDescription>
-        </DrawerHeader>
-
-        <div className="flex flex-col gap-4 overflow-y-auto px-4 text-sm">
-          {!isMobile && (
-            <ChartViewer
-              data={chartData}
-              config={chartConfig}
-              title="GoogleMeet Attendance"
-              description="Student log and activeness on online class meetings."
-            />
-          )}
-
-          {/* Account Info Display */}
-          <div className="grid gap-5">
-            <div>
-              <Label className="mb-1 text-muted-foreground">Account Type</Label>
-              <p className="font-medium capitalize">{item.role}</p>
-            </div>
-            <div>
-                  <CourseInfo user={item}/>
-            </div>
-          </div>
-        </div>
-
-        <DrawerFooter>
-          <DrawerClose asChild>
-            <Button variant="outline">Back</Button>
-          </DrawerClose>
-        </DrawerFooter>
-      </DrawerContent>
-    </Drawer>
-  )
+// ... (rest of the file remains unchanged below this point)
+// -----------------------------
+// Table Cell Viewer Component (UNCHANGED)
+// -----------------------------
+export function TableCellViewer<T extends { id: string }>({ item }: { item: T }) {
+ return <span className="font-mono text-xs text-muted-foreground transition-colors hover:underline hover:text-primary">{item.id}</span>
 }

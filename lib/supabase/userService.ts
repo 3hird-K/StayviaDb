@@ -2,6 +2,7 @@ import { createClient } from "./client"
 import { Database } from "@/database.types"
 
 export type User = Database["public"]["Tables"]["admins"]["Row"];
+export type Landlords = Database["public"]["Tables"]["users"]["Row"]
 
 
 //  Get User by ID
@@ -30,6 +31,18 @@ export async function getAllLandlords(accountType: string): Promise<User[]> {
       return data ?? []
   }
 
+
+export async function getAllLandlordsWithUnverified(): Promise<Landlords[]> {
+  const supabase = createClient()
+  const { data, error } = await supabase
+    .from("users")
+    .select("*")
+    .in("account_type", ["landlord", "landlord_unverified"])
+    
+    if (error) throw new Error(error.message)
+      return data as Landlords[] ?? []
+  }
+
 // Get All Students where student_id is not null
 export async function getAllStudent(): Promise<User[]> {
   const supabase = createClient()
@@ -55,4 +68,19 @@ export async function getAllAdmins(): Promise<User[]> {
     if (error) throw new Error(error.message)
       return data ?? []
   }
+
+
+  // Update Admin Profile
+export async function updateAdminProfile(id: string, updates: Partial<User>): Promise<User | null> {
+  const supabase = createClient()
+  const { data, error } = await supabase
+    .from("admins")
+    .update(updates)
+    .eq("id", id)
+    .select()
+    .single()
+
+  if (error) throw new Error(error.message)
+  return data
+}
 
