@@ -1,14 +1,13 @@
 "use client"
 
 import { Database } from "@/database.types"
-import { DataTable, TableCellViewer } from "./data-table" 
-import { getAllLandlordsWithUnverified, Landlords as SupabaseUser } from "@/lib/supabase/userService"
+import { DataTable, TableCellViewer } from "./data-table-students" 
+import { getAllStudent, Landlords as SupabaseUser } from "@/lib/supabase/userService"
 import { useQuery } from "@tanstack/react-query"
 import { ColumnDef } from "@tanstack/react-table" 
 import { Badge } from "./ui/badge"
+import { Skeleton } from "./ui/skeleton"
 
-// The Landlords type you provided. Since this comes from the 'users' table, 
-// we should align the local 'User' type with it.
 type LandlordsType = {
     account_type: string | null;
     avatar: string | null;
@@ -25,17 +24,48 @@ type LandlordsType = {
     username: string | null;
 }
 
-// Ensure 'User' is strictly defined as the row from the 'users' table
-// If your Database["public"]["Tables"]["users"]["Row"] is exactly LandlordsType, this is fine.
 type User = Database["public"]["Tables"]["users"]["Row"]
 
 
-export default function UsersTableClient() {
-    // FIX 1: The queryFn must be a function that returns a Promise, not the function itself.
-    // Also, tell useQuery that the data is of type LandlordsType[] (the expected return of the service function)
+const DataTableSkeleton = () => (
+    <div className="flex flex-col space-y-3 p-4 border rounded-lg">
+        {/* Header/Filter placeholder */}
+        <div className="flex justify-between items-center">
+            <Skeleton className="h-8 w-40" />
+            <div className="flex space-x-2">
+                <Skeleton className="h-8 w-32" />
+                <Skeleton className="h-8 w-24" />
+            </div>
+        </div>
+
+        {/* Table Body rows */}
+        <div className="space-y-3">
+            {[...Array(10)].map((_, i) => ( // 10 rows of skeleton data
+                <div key={i} className="grid grid-cols-7 gap-4 items-center p-3 border-b last:border-b-0">
+                    {/* ID/Username */}
+                    <Skeleton className="h-4 w-24 col-span-2" /> 
+                    {/* First Name */}
+                    <Skeleton className="h-4 w-20" /> 
+                    {/* Last Name */}
+                    <Skeleton className="h-4 w-20" />
+                    {/* Email/Contact */}
+                    <Skeleton className="h-4 w-32 col-span-1" />
+                    {/* Status */}
+                    <Skeleton className="h-6 w-16" />
+                    {/* Created At */}
+                    <Skeleton className="h-4 w-24" />
+                </div>
+            ))}
+        </div>
+    </div>
+);
+
+
+export default function UsersTableStudents() {
+
     const { data: usersData = [], isLoading, isError } = useQuery<LandlordsType[]>({
-        queryKey: ["users", "landlord", "unverified"],
-        queryFn: () => getAllLandlordsWithUnverified(), // <-- Corrected function call
+        queryKey: ["users", "students"],
+        queryFn: getAllStudent, 
     })
     const normalizedUsers: User[] = usersData.map((u) => ({
         ...u, 
@@ -49,37 +79,20 @@ export default function UsersTableClient() {
         header: "Id",
         cell: ({ row }) => <TableCellViewer item={row.original} />,
     },
+    { accessorKey: "student_id", header: "StudentId",
+        cell: ({ row }) => (
+      <div className="w-32">
+        <Badge variant="outline" className="text-muted-foreground px-1.5">
+          {row.original.student_id}
+        </Badge>
+      </div>
+    ),
+    },
     { accessorKey: "username", header: "Username" },
     { accessorKey: "firstname", header: "First Name" },
     { accessorKey: "lastname", header: "Last Name" },
     { accessorKey: "email", header: "Email" },
     { accessorKey: "contact", header: "Contact" },
-    
-    { 
-        accessorKey: "account_type", 
-        header: "Status",
-        cell: ({ row }) => {
-            const status = row.original.account_type;
-            
-            let statusText = "N/A";
-            let variant: "default" | "secondary" | "destructive" | "outline" = "outline"; // Default variant
-
-            if (status === "landlord") {
-                statusText = "Verified";
-                variant = "default"; 
-            } else if (status === "landlord_unverified") {
-                statusText = "Pending";
-                variant = "secondary"; 
-            } else if (status === "admin" || status === "student") {
-                statusText = status.charAt(0).toUpperCase() + status.slice(1);
-                variant = "outline";
-            }
-
-            return <Badge variant={variant}>{statusText}</Badge>;
-        }
-    },
-    
-    // 🎯 CREATED_AT FIX: Format the date string into a readable format
     { 
         accessorKey: "created_at", 
         header: "Created At",
@@ -90,10 +103,7 @@ export default function UsersTableClient() {
             }
 
             try {
-                // Parse the ISO string and format it
                 const date = new Date(createdAt);
-                
-                // Options for date and time display
                 const options: Intl.DateTimeFormatOptions = {
                     year: 'numeric',
                     month: 'short',
@@ -109,15 +119,17 @@ export default function UsersTableClient() {
                 );
 
             } catch (e) {
-                // Fallback for invalid date string
                 return <span className="text-muted-foreground">Invalid Date</span>;
             }
         }
     },
 ];
 
-    if (isLoading) return <div>Loading users...</div>
+    if (isLoading) return <DataTableSkeleton />;
     if (isError) return <div>Failed to load users.</div>
 
-    return <DataTable<User> data={normalizedUsers} columns={columns} />
+    return <>
+        <DataTable<User> data={normalizedUsers} columns={columns} />
+        
+    </>
 }

@@ -3,7 +3,7 @@
 import * as React from "react"
 import {
   IconDashboard,
-  IconActivity,
+  IconActivity, // Retaining original imports, but selecting new ones below
   IconNotes,
   IconUsers,
   IconSettings,
@@ -11,6 +11,16 @@ import {
   IconSearch,
   IconDatabase,
   IconFileWord,
+    // 🎯 NEW/BETTER ICONS FOR CONTEXT:
+    IconHome2, // For Dashboard
+    IconBuildingLighthouse, // For Landlords (representing property/owner management)
+    IconSchool, // For Students
+    IconBuilding, // For Properties
+    IconCalendar, // For Requests/Rules
+    IconUsersGroup, // For Team
+    IconMessageCircle,
+    IconLogicNot,
+    IconBan, // For Reviews/Feedback
 } from "@tabler/icons-react"
 
 import { NavDocuments } from "@/components/nav-documents"
@@ -50,23 +60,25 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
   const logoSrc = theme === "light" ? lightLogo : darkLogo
 
   const navMain = [
-    { title: "Dashboard", url: "/protected", icon: IconDashboard },
-    { title: "Manage Landlords", url: "/protected/landlords", icon: IconActivity },
-    { title: "Manage Students", url: "/protected/students", icon: IconNotes },
-    { title: "Manage Properties", url: "/protected/properties", icon: IconActivity },
-    { title: "Rentai Requests", url: "/protected/rules", icon: IconNotes },
-    { title: "Team", url: "/protected/team", icon: IconUsers },
+    { title: "Dashboard", url: "/protected", icon: IconHome2 },
+    { title: "Manage Landlords", url: "/protected/landlords", icon: IconBuildingLighthouse }, 
+    { title: "Manage Students", url: "/protected/students", icon: IconSchool }, 
+    { title: "Manage Properties", url: "/protected/properties", icon: IconBuilding }, 
+    { title: "Account Suspension", url: "/protected/accounts", icon: IconBan }, 
+    { title: "Team", url: "/protected/team", icon: IconUsersGroup },
   ]
 
+  
   const navSecondary = [
     { title: "Settings", url: "/protected", icon: IconSettings },
-    { title: "Get Help", url: "/protected", icon: IconHelp },
-    { title: "Search", url: "/protected", icon: IconSearch },
+    { title: "Get Help", url: "/protected", icon: IconHelp }, 
+    { title: "Search", url: "/protected", icon: IconSearch }, 
   ]
 
+  // 🎯 UPDATED: Documents/Reviews Icons
   const documents = [
-    { name: "Reviews & Feedbacks", url: "/protected", icon: IconDatabase },
-    { name: "Word Assistant", url: "/protected", icon: IconFileWord },
+    { name: "Reviews & Feedbacks", url: "/protected", icon: IconMessageCircle }, // Message/Chat Icon for feedback
+    { name: "Word Assistant", url: "/protected", icon: IconFileWord }, // Document/Word Icon (Appropriate)
   ]
 
   return (

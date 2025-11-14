@@ -1,10 +1,10 @@
 // app/protected/landlords/page.tsx
 import { SiteHeader } from "@/components/site-header"
-import UsersTableClient from "@/components/users-table-client"
+import UsersTableLandlord from "@/components/users-table-landlord"
 
-export default function UsersPage() {
+export default function LandlordsPage() {
   return <>
-      {/* <SiteHeader title="Manage Landlord" subtitle="Dashboard" /> */}
-      <UsersTableClient />
+      <SiteHeader title="Manage Landlord" subtitle="Dashboard" />
+      <UsersTableLandlord />
   </>
 }

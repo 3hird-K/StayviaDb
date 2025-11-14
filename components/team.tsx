@@ -58,7 +58,7 @@ export function TeamCarousel() {
                             alt={fullName}
                             fill
                             className="object-cover"
-                          />
+                          /> 
                         </div>
                         <CardHeader className="text-center p-0">
                           <CardTitle className="text-lg">{fullName}</CardTitle>
