@@ -29,7 +29,7 @@ const SUSPENSION_OPTIONS = [
     { label: "3 Days", value: "3d" },
     { label: "1 Week", value: "7d" },
     { label: "1 Month", value: "1m" },
-    { label: "Forever", value: "forever" },
+    { label: "Permanent", value: "forever" },
 ];
 
 // -----------------------------
@@ -591,7 +591,7 @@ function UserDrawer<T extends {
                     </div>
                     {suspensionDuration === 'forever' && (
                         <p className="text-xs text-destructive mt-2">
-                            **Warning:** 'Forever' will permanently block access until manually lifted.
+                            **Warning:** Permanently block access until manually lifted.
                         </p>
                     )}
                 </div>

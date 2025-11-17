@@ -64,7 +64,6 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
     { title: "Manage Landlords", url: "/protected/landlords", icon: IconBuildingLighthouse }, 
     { title: "Manage Students", url: "/protected/students", icon: IconSchool }, 
     { title: "Manage Properties", url: "/protected/properties", icon: IconBuilding }, 
-    { title: "Account Suspension", url: "/protected/accounts", icon: IconBan }, 
     { title: "Team", url: "/protected/team", icon: IconUsersGroup },
   ]
 
@@ -77,8 +76,7 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
 
   // 🎯 UPDATED: Documents/Reviews Icons
   const documents = [
-    { name: "Reviews & Feedbacks", url: "/protected", icon: IconMessageCircle }, // Message/Chat Icon for feedback
-    { name: "Word Assistant", url: "/protected", icon: IconFileWord }, // Document/Word Icon (Appropriate)
+    { name: "Reviews & Feedbacks", url: "/protected/feedbacks", icon: IconMessageCircle }, // Message/Chat Icon for feedback
   ]
 
   return (

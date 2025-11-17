@@ -29,12 +29,12 @@ export default function UsersPage() {
           >
             Active Renters
           </TabsTrigger>
-          <TabsTrigger 
+          {/* <TabsTrigger 
             value="pending" 
             className="rounded-b-none data-[state=active]:bg-background data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary py-4 text-sm"
           >
-            Pending Verification
-          </TabsTrigger>
+            Pending Rentals
+          </TabsTrigger> */}
         </TabsList>
         
         {/* Tab Content for Student List (Data Table) */}
@@ -47,9 +47,9 @@ export default function UsersPage() {
           <ActiveRenters />
         </TabsContent>
 
-        <TabsContent value="pending" className="mt-4 p-6">
+        {/* <TabsContent value="pending" className="mt-4 p-6">
           <PendingVerifications />
-        </TabsContent>
+        </TabsContent> */}
       </Tabs>
     </>
   )

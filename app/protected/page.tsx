@@ -27,7 +27,6 @@ export default async function ProtectedPage() {
               <div className="px-4 lg:px-6">
                 <ChartAreaInteractive />
               </div>
-              {/* <DataTable data={data} /> */}
             </div>
           </div>
         </div>
@@ -37,8 +36,7 @@ export default async function ProtectedPage() {
             <InfoIcon size={16} strokeWidth={2} />
             This is a protected page that you can only see as an Admin user
           </div>
-
-      {/* Non-admin view */}
+{/* 
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -56,8 +54,6 @@ export default async function ProtectedPage() {
             <Shield className="w-4 h-4 text-muted-foreground" />
             <span className="font-medium">Role:</span> {claims.role ?? "N/A"}
           </div>
-
-          {/* Debug full claims */}
           <pre className="text-xs font-mono p-3 rounded border max-h-40 overflow-auto bg-muted">
             {JSON.stringify(claims, null, 2)}
           </pre>
@@ -71,7 +67,7 @@ export default async function ProtectedPage() {
         <CardContent>
           <FetchDataSteps />
         </CardContent>
-      </Card>
+      </Card> */}
 
     </div>
   )

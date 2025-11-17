@@ -22,7 +22,7 @@ export async function getUserByEmail(email: string): Promise<User | null> {
 
 
 // Get All User Landlords
-export async function getAllLandlords(accountType: string): Promise<User[]> {
+export async function getAllLandlords(accountType: string): Promise<Landlords[]> {
   const supabase = createClient()
   const { data, error } = await supabase
     .from("users")
