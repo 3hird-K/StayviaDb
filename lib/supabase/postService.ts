@@ -7,7 +7,7 @@ export type Request = Database["public"]["Tables"]["requests"]["Row"];
 
 export type PostWithUserAndRequests = Posts & {
   users: User | null;
-  requests: Request[]; // 👈 include requests for badge/status logic
+  requests: Request[]; 
 };
 
 export async function getAllPosts(): Promise<PostWithUserAndRequests[]> {
@@ -25,6 +25,42 @@ export async function getAllPosts(): Promise<PostWithUserAndRequests[]> {
   if (error) throw new Error(error.message);
 
   return (data as PostWithUserAndRequests[]) ?? [];
+}
+
+// 🆕 NEW FUNCTION TO GET A SINGLE POST BY ID 
+export async function getPostById(postId: string): Promise<PostWithUserAndRequests | null> {
+  const supabase = createClient();
+
+  const { data, error } = await supabase
+    .from("posts")
+    .select(`
+      *,
+      users(*),
+      requests(*)
+    `) 
+    .eq('id', postId)
+    .single(); 
+
+  if (error && error.code !== 'PGRST116') { 
+    throw new Error(error.message);
+  }
+
+  // If data is null, or no rows were found, return null
+  if (!data) return null;
+
+  return data as PostWithUserAndRequests;
+}
+
+// 🆕 NEW FUNCTION TO DELETE A POST 
+export async function deletePost(postId: string): Promise<void> {
+  const supabase = createClient();
+
+  const { error } = await supabase
+    .from("posts")
+    .delete()
+    .eq("id", postId);
+
+  if (error) throw new Error(`Failed to delete post with ID ${postId}: ${error.message}`);
 }
 
 // Optional: fetch all requests independently if needed elsewhere

@@ -92,8 +92,9 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
                     <Image
                       src={logoSrc}
                       alt="Logo"
-                      height={70}
-                      width={70}
+                      className="hover:cursor-pointer"
+                      height={65}
+                      width={65}
                       onClick={() => router.push("/")}
                     />
                     <SidebarTrigger
@@ -127,13 +128,13 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
           onItemClick={(url) => router.push(url)}
           activePath={pathname}
         />
-        <NavSecondary
+        {/* <NavSecondary
           items={navSecondary}
           showText={open}
           onItemClick={(url) => router.push(url)}
           activePath={pathname}
           className="mt-auto"
-        />
+        /> */}
       </SidebarContent>
 
       {/* Footer (User info) */}
