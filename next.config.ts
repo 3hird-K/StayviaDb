@@ -2,10 +2,12 @@ import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
-  // swcMinify: true,
   images: {
-    domains: [
-      'ptwhyrlrfmpyhkwmljlu.supabase.co', // <-- Add your Supabase domain here
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'ptwhyrlrfmpyhkwmljlu.supabase.co',
+      },
     ],
   },
 };

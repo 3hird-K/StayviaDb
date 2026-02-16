@@ -1,9 +1,9 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { updateUser, deleteUser, getAllCourse } from "@/lib/supabase/users"
-import { deleteAuthUser } from "@/lib/supabase/server-api"
+import * as React from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { updateUser, deleteUser, getAllCourse } from "@/lib/supabase/users";
+import { deleteAuthUser } from "@/lib/supabase/server-api";
 import {
   Dialog,
   DialogClose,
@@ -12,9 +12,9 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "./ui/dialog"
-import { Input } from "./ui/input"
-import { Label } from "./ui/label"
+} from "./ui/dialog";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
 import {
   Select,
   SelectContent,
@@ -23,86 +23,84 @@ import {
   SelectLabel,
   SelectTrigger,
   SelectValue,
-} from "./ui/select"
-import { Button } from "./ui/button"
-import { toast } from "sonner"
-import { Database } from "@/database.types"
+} from "./ui/select";
+import { Button } from "./ui/button";
+import { toast } from "sonner";
+import { Database } from "@/database.types";
 
-
-type User = Database["public"]["Tables"]["users"]["Row"]
-
+type User = Database["public"]["Tables"]["users"]["Row"];
 
 export function EditUserDialog({ user }: { user: User }) {
-  const queryClient = useQueryClient()
-  const [openEdit, setOpenEdit] = React.useState(false)
-  const [openDelete, setOpenDelete] = React.useState(false)
-  const [firstname, setFirstname] = React.useState(user.firstname || "")
-  const [lastname, setLastname] = React.useState(user.lastname || "")
-  const [role, setRole] = React.useState(user.role || "")
-  const [selectedCourse, setSelectedCourse] = React.useState(user.course_id || "")
-  const [error, setError] = React.useState<string | null>(null)
+  const queryClient = useQueryClient();
+  const [openEdit, setOpenEdit] = React.useState(false);
+  const [openDelete, setOpenDelete] = React.useState(false);
+  const [firstname, setFirstname] = React.useState(user.firstname || "");
+  const [lastname, setLastname] = React.useState(user.lastname || "");
+  const [role, setRole] = React.useState(user.account_type || "");
+  const [selectedCourse, setSelectedCourse] = React.useState("");
+  const [error, setError] = React.useState<string | null>(null);
 
   // ✅ Fetch courses
   const { data: courses = [], isLoading: coursesLoading } = useQuery({
     queryKey: ["courses"],
     queryFn: getAllCourse,
-  })
+  });
 
   // ✅ Update mutation
   const updateMutation = useMutation({
-    mutationFn: async () => updateUser(user.id, {
-      firstname,
-      lastname,
-      role,
-      course_id: selectedCourse,
-    }),
+    mutationFn: async () =>
+      updateUser(user.id, {
+        firstname,
+        lastname,
+        account_type: role,
+      }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["users"] })
-      queryClient.invalidateQueries({ queryKey: ["users", user.id] })
-      setOpenEdit(false)
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries({ queryKey: ["users", user.id] });
+      setOpenEdit(false);
       toast.success("User updated successfully", {
         description: `${firstname} ${lastname} has been updated.`,
-        position: "top-center"
-      })
+        position: "top-center",
+      });
     },
     onError: (err: any) => {
-      setError(err.message || "Failed to update user")
+      setError(err.message || "Failed to update user");
       toast.error("Failed to update user", {
         description: err.message || "Something went wrong.",
         position: "top-center",
-      })
+      });
     },
-  })
+  });
 
   // ✅ Delete mutation
   const deleteMutation = useMutation({
     mutationFn: async () => {
-      await deleteUser(user.id)
-      await deleteAuthUser(user.id)
+      await deleteUser(user.id);
+      await deleteAuthUser(user.id);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["users"] })
-      queryClient.invalidateQueries({ queryKey: ["courses"] })
-      setOpenDelete(false)
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries({ queryKey: ["courses"] });
+      setOpenDelete(false);
       toast.success("User deleted successfully", {
         description: `${firstname} ${lastname} has been removed.`,
-        position: "top-center"
-      })
+        position: "top-center",
+      });
     },
     onError: (err: any) => {
-      setError(err.message || "Failed to delete user")
+      setError(err.message || "Failed to delete user");
       toast.error("Failed to delete user", {
         description: err.message || "Something went wrong.",
-        position: "top-center"
-      })
+        position: "top-center",
+      });
     },
-  })
+  });
 
   const handleUpdate = (e: React.FormEvent) => {
-    e.preventDefault()
-    setError(null)
-    updateMutation.mutate()
-  }
+    e.preventDefault();
+    setError(null);
+    updateMutation.mutate();
+  };
 
   return (
     <>
@@ -111,7 +109,9 @@ export function EditUserDialog({ user }: { user: User }) {
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Edit profile</DialogTitle>
-            <DialogDescription>Update the account details below.</DialogDescription>
+            <DialogDescription>
+              Update the account details below.
+            </DialogDescription>
           </DialogHeader>
 
           <form onSubmit={handleUpdate} className="grid gap-4">
@@ -148,7 +148,9 @@ export function EditUserDialog({ user }: { user: User }) {
                     <SelectItem value="Student">Student</SelectItem>
                     <SelectItem value="Instructor">Instructor</SelectItem>
                     <SelectItem value="Admin">Administrator</SelectItem>
-                    <SelectItem value="Admin/Instructor">Admin/Instructor</SelectItem>
+                    <SelectItem value="Admin/Instructor">
+                      Admin/Instructor
+                    </SelectItem>
                   </SelectGroup>
                 </SelectContent>
               </Select>
@@ -163,7 +165,11 @@ export function EditUserDialog({ user }: { user: User }) {
                 disabled={coursesLoading}
               >
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder={coursesLoading ? "Loading..." : "Select Course"} />
+                  <SelectValue
+                    placeholder={
+                      coursesLoading ? "Loading..." : "Select Course"
+                    }
+                  />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>
@@ -202,7 +208,11 @@ export function EditUserDialog({ user }: { user: User }) {
           <DialogHeader>
             <DialogTitle>Delete User</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete <span className="font-medium">{firstname} {lastname}</span>? This action cannot be undone.
+              Are you sure you want to delete{" "}
+              <span className="font-medium">
+                {firstname} {lastname}
+              </span>
+              ? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex justify-between">
@@ -225,10 +235,14 @@ export function EditUserDialog({ user }: { user: User }) {
         <Button variant="outline" size="sm" onClick={() => setOpenEdit(true)}>
           Edit
         </Button>
-        <Button variant="destructive" size="sm" onClick={() => setOpenDelete(true)}>
+        <Button
+          variant="destructive"
+          size="sm"
+          onClick={() => setOpenDelete(true)}
+        >
           Delete
         </Button>
       </div>
     </>
-  )
+  );
 }

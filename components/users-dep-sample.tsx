@@ -43,8 +43,6 @@
 //   )
 // }
 
-
-
 // UNREAD ANNOUNCEMENTS
 
 // "use client"
@@ -90,42 +88,37 @@
 //   )
 // }
 
-
 // READ ANNOUNCEMENTS
 
+"use client";
 
-"use client"
+import { useQuery } from "@tanstack/react-query";
+import { getUnreadAnnouncements } from "@/lib/supabase/posts";
+import { useCurrentUser } from "@/hooks/use-current-user";
+import { Database } from "@/database.types";
 
-import { useQuery } from "@tanstack/react-query"
-import { getUnreadAnnouncements } from "@/lib/supabase/posts"
-import { useCurrentUser } from "@/hooks/use-current-user"
-import { Database } from "@/database.types"
-
-export type User = Database["public"]["Tables"]["users"]["Row"]
-export type Announcements = Database["public"]["Tables"]["announcements"]["Row"]
-export type AnnouncementReads = Database["public"]["Tables"]["announcement_reads"]["Row"]
-export type AnnouncementWithRead = Announcements & { read: boolean; user?: User }
+export type User = Database["public"]["Tables"]["users"]["Row"];
+export type Post = Database["public"]["Tables"]["posts"]["Row"];
 
 export function ReadAnnouncements() {
-  const { user } = useCurrentUser()
-  const user_id = user?.id
+  const { user } = useCurrentUser();
+  const user_id = user?.id;
 
   const {
     data: announcements,
     isLoading,
     error,
-  // } = useQuery<AnnouncementWithRead[]>({
-  } = useQuery<(Announcements & { read: AnnouncementReads[]; user?: User })[]>({
+  } = useQuery<Post[]>({
     queryKey: ["announcements", user_id],
     queryFn: () => getUnreadAnnouncements({ user_id }),
     enabled: !!user_id,
-  })
+  });
 
-  if (isLoading) return <p>Loading...</p>
-  if (error) return <p>Error: {(error as Error).message}</p>
+  if (isLoading) return <p>Loading...</p>;
+  if (error) return <p>Error: {(error as Error).message}</p>;
 
   if (!announcements) {
-    return <p>No unread announcements (read = false)</p>
+    return <p>No unread announcements (read = false)</p>;
   }
 
   return (
@@ -136,5 +129,5 @@ export function ReadAnnouncements() {
         {JSON.stringify(announcements, null, 2)}
       </pre>
     </div>
-  )
+  );
 }

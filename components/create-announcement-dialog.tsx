@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -9,56 +9,63 @@ import {
   DialogTitle,
   DialogTrigger,
   DialogFooter,
-} from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "./ui/textarea"
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "./ui/textarea";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Select,
   SelectTrigger,
   SelectContent,
   SelectItem,
   SelectValue,
-} from "@/components/ui/select"
-import { getAllCourse } from "@/lib/supabase/course"
-import { getUserCourse } from "@/lib/supabase/users"
-import { Database } from "@/database.types"
-import { toast } from "sonner"
-import { createAnnouncement } from "@/lib/supabase/posts"
+} from "@/components/ui/select";
+import { getAllCourse } from "@/lib/supabase/course";
+import { getUserCourse } from "@/lib/supabase/users";
+import { Database } from "@/database.types";
+import { toast } from "sonner";
+import { createAnnouncement } from "@/lib/supabase/posts";
 
-type User = Database["public"]["Tables"]["users"]["Row"]
+type User = Database["public"]["Tables"]["users"]["Row"];
 
-export function CreateAnnouncement({ children, user }: { children: React.ReactNode; user?: User }) {
-  const [open, setOpen] = useState(false)
-  const [selectedCourse, setSelectedCourse] = useState<string>("")
-  const [announcementTitle, setAnnouncementTitle] = useState("")
-  const [announcementDescription, setAnnouncement] = useState("")
+export function CreateAnnouncement({
+  children,
+  user,
+}: {
+  children: React.ReactNode;
+  user?: User;
+}) {
+  const [open, setOpen] = useState(false);
+  const [selectedCourse, setSelectedCourse] = useState<string>("");
+  const [announcementTitle, setAnnouncementTitle] = useState("");
+  const [announcementDescription, setAnnouncement] = useState("");
 
-  const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
 
-  if (!user) return null
+  if (!user) return null;
 
-  const isAdmin = user.role === "Admin" || user.role === "Admin/Instructor"
-  const course_id = user.course_id
+  const isAdmin =
+    user.account_type === "Admin" || user.account_type === "Admin/Instructor";
+  const course_id: string | null = null;
 
   const { data: courses, isLoading: coursesLoading } = useQuery({
     queryKey: ["courses"],
     queryFn: getAllCourse,
     enabled: isAdmin,
-  })
+  });
 
   const { data: userCourse, isLoading: userCourseLoading } = useQuery({
     queryKey: ["users", course_id],
     queryFn: () => getUserCourse(course_id!),
     enabled: !isAdmin && !!course_id,
-  })
+  });
 
   useEffect(() => {
     if (!isAdmin && userCourse?.id) {
-      setSelectedCourse(userCourse.id)
+      setSelectedCourse(userCourse.id);
     }
-  }, [isAdmin, userCourse])
+  }, [isAdmin, userCourse]);
 
   const createRuleMutation = useMutation({
     mutationFn: () =>
@@ -68,27 +75,31 @@ export function CreateAnnouncement({ children, user }: { children: React.ReactNo
         description: announcementDescription,
       }),
     onSuccess: () => {
-      toast.success("Announcement created successfully", { position: "top-center" })
-      queryClient.invalidateQueries({ queryKey: ["announcements"] })
-      setOpen(false)
-      setAnnouncementTitle("")
-      setAnnouncement("")
+      toast.success("Announcement created successfully", {
+        position: "top-center",
+      });
+      queryClient.invalidateQueries({ queryKey: ["announcements"] });
+      setOpen(false);
+      setAnnouncementTitle("");
+      setAnnouncement("");
     },
     onError: (err: any) => {
-      toast.error("Failed to create announcement: " + err.message, { position: "top-center" })
+      toast.error("Failed to create announcement: " + err.message, {
+        position: "top-center",
+      });
     },
-  })
+  });
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
 
     if (!selectedCourse || !announcementTitle || !announcementDescription) {
-      toast.warning("Please fill out all fields", { position: "top-center" })
-      return
+      toast.warning("Please fill out all fields", { position: "top-center" });
+      return;
     }
 
-    createRuleMutation.mutate()
-  }
+    createRuleMutation.mutate();
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -150,6 +161,5 @@ export function CreateAnnouncement({ children, user }: { children: React.ReactNo
         </form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
-
